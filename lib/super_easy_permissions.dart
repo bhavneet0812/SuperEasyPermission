@@ -88,19 +88,23 @@ class SuperEasyPermissions {
   static Future<bool> askPermission(Permissions permission) async {
     int result = await getPermissionResult(permission);
     var permissionName = _getEquivalentPermissionName(permission);
-    if (result == 0) {
-      // Code for deny (false)
-      var status = await permissionName.request();
-      return status == PermissionStatus.granted ||
-          status == PermissionStatus.limited;
-    } else if (result == -1) {
-      // Code for notAgain (false)
-      await openAppSettings();
-      result = await getPermissionResult(permission);
-      return result == 1;
+    if (permissionName != null) {
+      if (result == 0) {
+        // Code for deny (false)
+        var status = await permissionName.request();
+        return status == PermissionStatus.granted ||
+            status == PermissionStatus.limited;
+      } else if (result == -1) {
+        // Code for notAgain (false)
+        await openAppSettings();
+        result = await getPermissionResult(permission);
+        return result == 1;
+      } else {
+        // already granted
+        return true;
+      }
     } else {
-      // already granted
-      return true;
+      return false;
     }
   }
 
@@ -124,21 +128,25 @@ class SuperEasyPermissions {
   /// return -1 if user set to don't ask again
   static Future<int> getPermissionResult(Permissions permission) async {
     var permissionName = _getEquivalentPermissionName(permission);
-    var permissionStatus = await permissionName.status;
-    int result;
-    if (permissionStatus == PermissionStatus.granted) {
-      result = 1;
-    } else if (permissionStatus == PermissionStatus.limited) {
-      result = 1;
-    } else if (permissionStatus == PermissionStatus.permanentlyDenied) {
-      result = -1;
+    if (permissionName != null) {
+      var permissionStatus = await permissionName.status;
+      int result;
+      if (permissionStatus == PermissionStatus.granted) {
+        result = 1;
+      } else if (permissionStatus == PermissionStatus.limited) {
+        result = 1;
+      } else if (permissionStatus == PermissionStatus.permanentlyDenied) {
+        result = -1;
+      } else {
+        result = 0;
+      }
+      return result;
     } else {
-      result = 0;
+      return 0;
     }
-    return result;
   }
 
-  static Permission _getEquivalentPermissionName(Permissions permissionName) {
+  static Permission? _getEquivalentPermissionName(Permissions permissionName) {
     var map = <Permissions, Permission>{
       Permissions.accessMediaLocation: Permission.accessMediaLocation,
       Permissions.activityRecognition: Permission.activityRecognition,
@@ -146,8 +154,7 @@ class SuperEasyPermissions {
       Permissions.calendar: Permission.calendar,
       Permissions.camera: Permission.camera,
       Permissions.contacts: Permission.contacts,
-      Permissions.ignoreBatteryOptimizations:
-          Permission.ignoreBatteryOptimizations,
+      Permissions.ignoreBatteryOptimizations: Permission.ignoreBatteryOptimizations,
       Permissions.location: Permission.location,
       Permissions.locationAlways: Permission.locationAlways,
       Permissions.locationWhenInUse: Permission.locationWhenInUse,
