@@ -85,7 +85,7 @@ class SuperEasyPermissions {
 
   /// Asks(request) for permission and return true if granted, otherwise returns false.
   /// If the permission is permanently denied, This will open the settings
-  static Future<bool> askPermission(Permissions permission) async {
+  static Future<bool> askPermission(Permissions permission, {Duration? shouldOpenSettingWithDelay}) async {
     int result = await getPermissionResult(permission);
     var permissionName = _getEquivalentPermissionName(permission);
     if (permissionName != null) {
@@ -96,7 +96,11 @@ class SuperEasyPermissions {
             status == PermissionStatus.limited;
       } else if (result == -1) {
         // Code for notAgain (false)
-        await openAppSettings();
+        if (shouldOpenSettingWithDelay != null) {
+          await Future.delayed(shouldOpenSettingWithDelay, () {
+            return openAppSettings();
+          });
+        }
         result = await getPermissionResult(permission);
         return result == 1;
       } else {
